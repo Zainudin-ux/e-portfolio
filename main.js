@@ -93,51 +93,82 @@
   document.getElementById('year').textContent = new Date().getFullYear();
 
   // 6. Logika Slider Tentang Saya
-  const aboutTrack = document.getElementById('about-slider-track');
-  const aboutDots = document.getElementById('about-slider-dots').children;
-  let currentSlide = 0;
-  const totalSlides = 3;
-  let slideInterval;
+ const aboutTrack = document.getElementById('about-slider-track');
+  const aboutDotsContainer = document.getElementById('about-slider-dots');
 
-  function updateSlider() {
-      // Geser track
-      aboutTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
+  if (aboutTrack && aboutDotsContainer) {
+      const aboutDots = aboutDotsContainer.children;
+      let currentSlide = 0;
+      const totalSlides = aboutDots.length;
+      let slideInterval;
+
+      function updateSlider() {
+          aboutTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
+          Array.from(aboutDots).forEach((dot, index) => {
+              if (index === currentSlide) {
+                  dot.classList.remove('w-3', 'bg-gray-300', 'hover:bg-primary/50');
+                  dot.classList.add('w-8', 'bg-primary');
+              } else {
+                  dot.classList.remove('w-8', 'bg-primary');
+                  dot.classList.add('w-3', 'bg-gray-300', 'hover:bg-primary/50');
+              }
+          });
+      }
+
+      function nextSlide() {
+          currentSlide = (currentSlide + 1) % totalSlides;
+          updateSlider();
+      }
+
+      function prevSlide() {
+          currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+          updateSlider();
+      }
+
+      window.goToSlide = function(index) {
+          currentSlide = index;
+          updateSlider();
+          resetSlideTimer(); 
+      }
+
+      function startSlideTimer() {
+          slideInterval = setInterval(nextSlide, 15000); // Otomatis tiap 15 detik
+      }
+
+      function resetSlideTimer() {
+          clearInterval(slideInterval);
+          startSlideTimer();
+      }
       
-      // Perbarui gaya dots
-      Array.from(aboutDots).forEach((dot, index) => {
-          if (index === currentSlide) {
-              dot.classList.remove('w-3', 'bg-gray-300', 'hover:bg-primary/50');
-              dot.classList.add('w-8', 'bg-primary');
-          } else {
-              dot.classList.remove('w-8', 'bg-primary');
-              dot.classList.add('w-3', 'bg-gray-300', 'hover:bg-primary/50');
-          }
-      });
-  }
-
-  function nextSlide() {
-      currentSlide = (currentSlide + 1) % totalSlides;
-      updateSlider();
-  }
-
-  function goToSlide(index) {
-      currentSlide = index;
-      updateSlider();
-      resetSlideTimer(); // Reset timer agar tidak langsung berpindah setelah diklik
-  }
-
-  function startSlideTimer() {
-      // Berpindah setiap 15 detik (15000 milidetik)
-      slideInterval = setInterval(nextSlide, 10000);
-  }
-
-  function resetSlideTimer() {
-      clearInterval(slideInterval);
       startSlideTimer();
+
+      // --- LOGIKA GESTUR USAP (SWIPE) UNTUK TENTANG SAYA ---
+      let aboutStartX = 0;
+      let aboutEndX = 0;
+
+      aboutTrack.addEventListener('touchstart', e => {
+          aboutStartX = e.changedTouches[0].screenX;
+      }, {passive: true});
+
+      aboutTrack.addEventListener('touchend', e => {
+          aboutEndX = e.changedTouches[0].screenX;
+          handleAboutSwipe();
+      }, {passive: true});
+
+      function handleAboutSwipe() {
+          const swipeThreshold = 50; // Jarak minimal usapan (pixel)
+          if (aboutEndX < aboutStartX - swipeThreshold) {
+              // Usap ke kiri -> Slide selanjutnya
+              nextSlide();
+              resetSlideTimer();
+          }
+          if (aboutEndX > aboutStartX + swipeThreshold) {
+              // Usap ke kanan -> Slide sebelumnya
+              prevSlide();
+              resetSlideTimer();
+          }
+      }
   }
-  
-  // Mulai timer slider pertama kali
-  startSlideTimer();
   // Script untuk Toggle Kartu Penilaian
 const btnTogglePenilaian = document.getElementById('btn-toggle-penilaian');
 const ekstraCards = document.querySelectorAll('.penilaian-ekstra');
